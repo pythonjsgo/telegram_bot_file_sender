@@ -1,2 +1,1 @@
-pyTelegramBotAPI
-fs-pochta-api
+python-telegram-bot
