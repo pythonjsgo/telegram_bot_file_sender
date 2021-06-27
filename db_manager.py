@@ -11,7 +11,7 @@ class DB_manager:
         self.sql.execute("CREATE TABLE IF NOT EXISTS downloads ( uuid TEXT, user_id TEXT)")
         self.sql.execute("CREATE TABLE IF NOT EXISTS messages (message_id TEXT, uuid TEXT, deep_linked_url TEXT)")
         self.sql.execute(
-            "CREATE TABLE IF NOT EXISTS files (file_id TEXT, uuid TEXT, channel_id TEXT, channel_url TEXT, downloads INT, uniq_downloads INT, downloads_with_subscribe INT, downloads_with_new_subscribe, description TEXT)")
+            "CREATE TABLE IF NOT EXISTS files (file_id TEXT, uuid TEXT, channel_id TEXT, channel_url TEXT, downloads INT, uniq_downloads INT, downloads_with_subscribe INT, downloads_with_new_subscribe, description TEXT, creator_id TEXT)")
         self.db.commit()
 
     def update_user_position(self, user_id, position="", current_channel_id="", selected_channel_id=""):
@@ -31,6 +31,10 @@ class DB_manager:
                     f'UPDATE users SET selected_channel_id = "{selected_channel_id}" WHERE user_id = "{user_id}"')
 
         self.db.commit()
+
+    def get_file_creator_id(self, uuid):
+        self.sql.execute(f"SELECT creator_id FROM files WHERE uuid = '{uuid}'")
+        return self.sql.fetchone()[0]
 
     def get_if_download(self, user_id, uuid):
         self.sql.execute(f"SELECT user_id FROM downloads WHERE (uuid = '{uuid}' AND user_id = '{user_id}')")
@@ -74,9 +78,9 @@ class DB_manager:
         self.sql.execute(f"SELECT file_id FROM files WHERE uuid = '{uuid}'")
         return self.sql.fetchone()
 
-    def add_file_id(self, file_id, uuid, channel_id, channel_url, description):
+    def add_file_id(self, file_id, uuid, channel_id, channel_url, description, user_id):
         self.sql.execute(
-            f"INSERT INTO files VALUES  ('{file_id}', '{uuid}', '{channel_id}',' {channel_url}', 0, 0, 0, 0, '{description}')")
+            f"INSERT INTO files VALUES  ('{file_id}', '{uuid}', '{channel_id}',' {channel_url}', 0, 0, 0, 0, '{description}', '{user_id}')")
         self.db.commit()
 
     def get_data_from_file(self, uuid, value):

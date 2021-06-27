@@ -64,7 +64,9 @@ def StartHandler(update: Update, context: CallbackContext):
                         print("В первыйц раз")
                         db.increase("uniq_downloads", uuid)
                         db.add_download(user_id, uuid)
-                    update_message(user_id, uuid)
+
+                    print(db.get_file_creator_id(uuid), "dfjdfghjdfgs")
+                    update_message(db.get_file_creator_id(uuid), uuid)
                 else:
                     update.message.reply_text(f"Для получения файла подпишитесь на канал", reply_markup=reply_markup)
             else:
@@ -73,7 +75,7 @@ def StartHandler(update: Update, context: CallbackContext):
             update.message.reply_text("Файл не найден")
     else:
         if user_id in config.admin_list:
-            reply_markup = ReplyKeyboardMarkup(keyboards.keyboard_admin_start)
+            reply_markup = ReplyKeyboardMarkup(keyboards.keyboard_admin_start, resize_keyboard=True)
             update.message.reply_text("Приветствую, Администратор! ", reply_markup=reply_markup)
 
         # update.message.reply_text('Отправьте файл, чтобы получить ссылку')
@@ -90,7 +92,8 @@ def CreateFileLinkHandler(update: Update, context: CallbackContext):
             print(channel_id, "djklshjkhdjksdf")
             db.add_file_id(update.message.document.file_id, uuid, description=update.message.caption,
                            channel_id=channel_id,
-                           channel_url=db.get_channel_url_by_id(channel_id))
+                           channel_url=db.get_channel_url_by_id(channel_id),
+                           user_id=user_id)
             # print(db.get_file_channel(update.message.document.file_id))
             keyboard = []
 
@@ -196,7 +199,12 @@ def button(update: Update, context: CallbackContext):
         uuid = query.data.split("|")[1]
         status = bot.getChatMember(chat_id=db.get_file_channel(uuid), user_id=user_id).status
         if status == "creator" or status == "administrator" or status == "member":
-            bot.send_document(chat_id=user_id, document=db.get_file_id(uuid)[0])
+
+            description = db.get_data_from_file(uuid, "description")
+            if description != "None":
+                update.callback_query.message.reply_document(db.get_file_id(uuid)[0], caption=description)
+            else:
+                update.callback_query.message.reply_document(db.get_file_id(uuid)[0])
             db.increase("downloads", uuid)
             db.increase("downloads_with_subscribe", uuid)
             if db.get_if_download(user_id=user_id, uuid=uuid):
@@ -207,7 +215,9 @@ def button(update: Update, context: CallbackContext):
                 db.increase("downloads_with_new_subscribe", uuid)
                 db.increase("uniq_downloads", uuid)
                 db.add_download(user_id, uuid)
-            update_message(user_id, uuid)
+
+            print(db.get_file_creator_id(uuid), "dfjdfghjdfgs")
+            update_message(db.get_file_creator_id(uuid), uuid)
 
         else:
             bot.send_message(chat_id=user_id, text="Подписка не найдена!")
